@@ -122,6 +122,20 @@ export default function EventPage() {
         )}
       </div>
 
+      {/* Login prompt for non-logged-in users */}
+      {!user && (
+        <div className="mb-6 bg-rl-card border border-rl-accent/30 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-white font-medium text-sm mb-0.5">Sign in to access event documents</p>
+            <p className="text-white/45 text-xs">View route files, bulletins, results and more.</p>
+          </div>
+          <div className="flex gap-2 flex-shrink-0">
+            <Link to="/login" className="rl-btn-ghost text-xs px-4 py-2">Sign in</Link>
+            <Link to="/register" className="rl-btn-primary text-xs px-4 py-2">Register</Link>
+          </div>
+        </div>
+      )}
+
       {/* Section tiles */}
       <section className="mb-6">
         <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">Event sections</p>

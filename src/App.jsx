@@ -19,6 +19,13 @@ function ProtectedOrganiser({ children }) {
   return children
 }
 
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><LoadingSpinner /></div>
+  if (!user) return <Navigate to="/login" replace />
+  return children
+}
+
 function LoadingSpinner() {
   return (
     <div className="w-8 h-8 border-2 border-white/10 border-t-rl-accent rounded-full animate-spin" />
@@ -34,7 +41,7 @@ export default function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/event/:rallyId" element={<EventPage />} />
-        <Route path="/event/:rallyId/:section" element={<SectionPage />} />
+        <Route path="/event/:rallyId/:section" element={<ProtectedRoute><SectionPage /></ProtectedRoute>} />
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
         <Route path="/organiser" element={
           <ProtectedOrganiser><OrganizerDashboard /></ProtectedOrganiser>
