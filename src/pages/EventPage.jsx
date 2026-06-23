@@ -136,6 +136,86 @@ export default function EventPage() {
         </div>
       )}
 
+      {/* Regulations at a glance */}
+      {rally.regulations_data && (
+        <section className="mb-6">
+          <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">Event at a glance</p>
+          <div className="bg-rl-card border border-white/10 rounded-xl p-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {rally.regulations_data.rallyHQ && (
+              <div>
+                <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Rally HQ</p>
+                <p className="text-white text-sm">{rally.regulations_data.rallyHQ}</p>
+              </div>
+            )}
+            {rally.regulations_data.clerkOfCourse && (
+              <div>
+                <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Clerk of Course</p>
+                <p className="text-white text-sm">{rally.regulations_data.clerkOfCourse}</p>
+              </div>
+            )}
+            {rally.regulations_data.organiser?.contact && (
+              <div>
+                <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Organiser</p>
+                <p className="text-white text-sm">{rally.regulations_data.organiser.contact}</p>
+                {rally.regulations_data.organiser.phone && (
+                  <p className="text-white/50 text-xs mt-0.5">{rally.regulations_data.organiser.phone}</p>
+                )}
+              </div>
+            )}
+            {rally.regulations_data.stageCount > 0 && (
+              <div>
+                <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Stages</p>
+                <p className="text-white text-sm">{rally.regulations_data.stageCount} stages</p>
+                {rally.regulations_data.totalStageDistance && (
+                  <p className="text-white/50 text-xs mt-0.5">{rally.regulations_data.totalStageDistance} competitive</p>
+                )}
+              </div>
+            )}
+            {rally.regulations_data.serviceArea && (
+              <div>
+                <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Service Area</p>
+                <p className="text-white text-sm">{rally.regulations_data.serviceArea}</p>
+              </div>
+            )}
+            {rally.regulations_data.entryFeesSummary && (
+              <div>
+                <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Entry Fees</p>
+                <p className="text-white text-sm">{rally.regulations_data.entryFeesSummary}</p>
+              </div>
+            )}
+          </div>
+          {rally.regulations_data.stages && rally.regulations_data.stages.length > 0 && (
+            <div className="mt-3 bg-rl-card border border-white/10 rounded-xl overflow-hidden">
+              <p className="text-white/35 text-[11px] uppercase tracking-wide px-4 py-2.5 border-b border-white/8">Stage list</p>
+              <div className="divide-y divide-white/5">
+                {rally.regulations_data.stages.map((stage, i) => (
+                  <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                    <div className="flex items-center gap-3">
+                      <span className="text-white/25 text-xs w-5 text-right">{stage.number}</span>
+                      <span className="text-white text-sm">{stage.name}</span>
+                    </div>
+                    <span className="text-white/45 text-xs">{stage.distance}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {rally.regulations_pdf_url && (
+            <a
+              href={rally.regulations_pdf_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 text-xs text-white/35 hover:text-rl-accent transition-colors inline-flex items-center gap-1"
+            >
+              <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                <path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z" />
+              </svg>
+              Download full regulations PDF
+            </a>
+          )}
+        </section>
+      )}
+
       {/* Section tiles */}
       <section className="mb-6">
         <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">Event sections</p>

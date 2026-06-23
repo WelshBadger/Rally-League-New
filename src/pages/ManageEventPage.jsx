@@ -23,6 +23,9 @@ export default function ManageEventPage() {
   const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({ title: '', section: 'bulletins', file: null, isUrgent: false, linkUrl: '' })
   const [docType, setDocType] = useState('pdf') // pdf | link | text
+  const [regsFile, setRegsFile] = useState(null)
+  const [regsUploading, setRegsUploading] = useState(false)
+  const [regsExtracting, setRegsExtracting] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -99,6 +102,69 @@ export default function ManageEventPage() {
     loadDocs(activeSection)
   }
 
+  async function handleRegsUpload(e) {
+    e.preventDefault()
+    if (!regsFile) { toast.error('Please select a PDF'); return }
+    setRegsUploading(true)
+
+    try {
+      // Upload PDF to storage
+      const path = `${rallyId}/regulations_${Date.now()}.pdf`
+      const { error: uploadErr } = await supabase.storage
+        .from('rally-docs')
+        .upload(path, regsFile, { contentType: 'application/pdf', upsert: true })
+      if (uploadErr) throw uploadErr
+
+      const { data: { publicUrl } } = supabase.storage.from('rally-docs').getPublicUrl(path)
+
+      // Save the URL
+      await supabase.from('rallies').update({ regulations_pdf_url: publicUrl }).eq('id', rallyId)
+
+      // Read as base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const dataUrl = reader.result
+          // Strip "data:application/pdf;base64," prefix
+          resolve(dataUrl.split(',')[1])
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(regsFile)
+      })
+
+      setRegsUploading(false)
+      setRegsExtracting(true)
+
+      // Call edge function to extract info
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-regulations`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ rallyId, pdfBase64: base64 }),
+        }
+      )
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Extraction failed')
+
+      // Refresh rally data
+      const { data: updated } = await supabase.from('rallies').select('*').eq('id', rallyId).single()
+      setRally(updated)
+      setRegsFile(null)
+      toast.success('Regulations uploaded and info extracted!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to process regulations')
+    } finally {
+      setRegsUploading(false)
+      setRegsExtracting(false)
+    }
+  }
+
   if (!rally) return <div className="max-w-4xl mx-auto px-4 py-8"><div className="h-8 w-48 bg-white/5 rounded-lg animate-pulse" /></div>
 
   return (
@@ -113,6 +179,63 @@ export default function ManageEventPage() {
       <div className="flex items-start justify-between gap-4 mb-6">
         <h1 className="text-xl font-medium text-white">{rally.name}</h1>
         <Link to={`/event/${rallyId}`} className="rl-btn-ghost text-xs">Preview ↗</Link>
+      </div>
+
+      {/* Regulations card */}
+      <div className="bg-rl-card border border-white/10 rounded-xl p-5 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-white font-medium text-sm">Event Regulations</h2>
+            <p className="text-white/35 text-xs mt-0.5">Upload the supplementary regulations PDF — key info will be extracted automatically.</p>
+          </div>
+          {rally.regulations_pdf_url && (
+            <a href={rally.regulations_pdf_url} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-rl-accent hover:text-white transition-colors flex-shrink-0">
+              View PDF ↗
+            </a>
+          )}
+        </div>
+
+        {rally.regulations_data ? (
+          <div className="mb-3 bg-rl-accent/5 border border-rl-accent/20 rounded-lg p-3 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+            {rally.regulations_data.eventName && (
+              <div><p className="text-white/35 mb-0.5">Event</p><p className="text-white">{rally.regulations_data.eventName}</p></div>
+            )}
+            {rally.regulations_data.dates && (
+              <div><p className="text-white/35 mb-0.5">Dates</p><p className="text-white">{rally.regulations_data.dates}</p></div>
+            )}
+            {rally.regulations_data.clerkOfCourse && (
+              <div><p className="text-white/35 mb-0.5">Clerk of Course</p><p className="text-white">{rally.regulations_data.clerkOfCourse}</p></div>
+            )}
+            {rally.regulations_data.totalStageDistance && (
+              <div><p className="text-white/35 mb-0.5">Stage distance</p><p className="text-white">{rally.regulations_data.totalStageDistance}</p></div>
+            )}
+            {rally.regulations_data.stageCount > 0 && (
+              <div><p className="text-white/35 mb-0.5">Stages</p><p className="text-white">{rally.regulations_data.stageCount}</p></div>
+            )}
+            {rally.regulations_data.organiser?.contact && (
+              <div><p className="text-white/35 mb-0.5">Organiser contact</p><p className="text-white">{rally.regulations_data.organiser.contact}</p></div>
+            )}
+          </div>
+        ) : null}
+
+        <form onSubmit={handleRegsUpload} className="flex items-center gap-3">
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={e => setRegsFile(e.target.files[0])}
+            className="flex-1 text-xs text-white/50 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:bg-white/10 file:text-white/70 cursor-pointer"
+          />
+          <button
+            type="submit"
+            disabled={!regsFile || regsUploading || regsExtracting}
+            className="rl-btn-primary text-xs flex-shrink-0 flex items-center gap-2 disabled:opacity-50"
+          >
+            {regsUploading && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+            {regsExtracting && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+            {regsUploading ? 'Uploading…' : regsExtracting ? 'Extracting…' : rally.regulations_data ? 'Replace' : 'Upload & Extract'}
+          </button>
+        </form>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
