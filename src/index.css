@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    background-color: #0f0f0f;
+    color: #ffffff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  .rl-card {
+    @apply bg-rl-card border border-white/10 rounded-xl;
+  }
+
+  .rl-btn-primary {
+    @apply bg-rl-accent hover:bg-rl-accent-hover text-white font-medium px-5 py-2.5 rounded-lg transition-colors duration-150 text-sm;
+  }
+
+  .rl-btn-ghost {
+    @apply border border-white/20 hover:border-white/40 text-white/70 hover:text-white font-medium px-5 py-2.5 rounded-lg transition-colors duration-150 text-sm;
+  }
+
+  .rl-input {
+    @apply bg-white/5 border border-white/10 focus:border-white/30 text-white placeholder-white/30 rounded-lg px-4 py-2.5 w-full outline-none transition-colors duration-150 text-sm;
+  }
+
+  .rl-label {
+    @apply block text-xs text-white/50 uppercase tracking-wider mb-1.5 font-medium;
+  }
+}
