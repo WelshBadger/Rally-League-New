@@ -178,23 +178,7 @@ export default function EventPage() {
               </div>
             )}
           </div>
-          {rally.regulations_data.stages && rally.regulations_data.stages.length > 0 && (
-            <div className="mt-3 bg-rl-card border border-white/10 rounded-xl overflow-hidden">
-              <p className="text-white/35 text-[11px] uppercase tracking-wide px-4 py-2.5 border-b border-white/8">Stage list</p>
-              <div className="divide-y divide-white/5">
-                {rally.regulations_data.stages.map((stage, i) => (
-                  <div key={i} className="flex items-center justify-between px-4 py-2.5">
-                    <div className="flex items-center gap-3">
-                      <span className="text-white/25 text-xs w-5 text-right">{stage.number}</span>
-                      <span className="text-white text-sm">{stage.name}</span>
-                    </div>
-                    <span className="text-white/45 text-xs">{stage.distance}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {rally.regulations_pdf_url && (
+{rally.regulations_pdf_url && (
             <a
               href={rally.regulations_pdf_url}
               target="_blank"

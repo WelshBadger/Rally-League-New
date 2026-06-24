@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
   },
   "clerkOfCourse": "name of clerk of course",
   "safetyDelegate": "name of safety delegate or null",
+  "keyOfficials": [
+    { "role": "exact role title from the document", "name": "person name" }
+  ],
   "stageCount": 0,
   "totalStageDistance": "e.g. 200km",
   "totalItineraryDistance": "e.g. 578km",
@@ -67,6 +70,8 @@ Deno.serve(async (req) => {
   "entryFeesSummary": "brief summary of entry fee structure e.g. €1,395 International, €845 Junior",
   "vehicleClasses": "brief list of classes e.g. RC2, RC3, RC4, RC5"
 }
+
+For keyOfficials, extract EVERY named official listed in the document — stewards, scrutineers, medical officer, radio coordinator, safety car driver, results manager, timekeeper, etc. Include everyone with a named role. Do not include Clerk of Course or Safety Delegate here as they have their own fields.
 
 Return ONLY valid JSON. Use null for fields not found.`,
             },
