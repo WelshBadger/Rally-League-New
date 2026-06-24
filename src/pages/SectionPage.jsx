@@ -151,6 +151,51 @@ export default function SectionPage() {
         </div>
       )}
 
+      {/* Team: officials from regulations */}
+      {!loading && section === 'team' && rally?.regulations_data && (
+        <div className="mb-6">
+          <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">From regulations</p>
+          <div className="bg-rl-card border border-white/10 rounded-xl divide-y divide-white/8">
+            {rally.regulations_data.organiser?.club && (
+              <div className="px-4 py-3">
+                <p className="text-white/35 text-xs mb-0.5">Organising Club</p>
+                <p className="text-white text-sm">{rally.regulations_data.organiser.club}</p>
+              </div>
+            )}
+            {rally.regulations_data.clerkOfCourse && (
+              <div className="px-4 py-3">
+                <p className="text-white/35 text-xs mb-0.5">Clerk of Course</p>
+                <p className="text-white text-sm">{rally.regulations_data.clerkOfCourse}</p>
+              </div>
+            )}
+            {rally.regulations_data.safetyDelegate && (
+              <div className="px-4 py-3">
+                <p className="text-white/35 text-xs mb-0.5">Safety Delegate</p>
+                <p className="text-white text-sm">{rally.regulations_data.safetyDelegate}</p>
+              </div>
+            )}
+            {rally.regulations_data.organiser?.contact && (
+              <div className="px-4 py-3">
+                <p className="text-white/35 text-xs mb-0.5">Organiser Contact</p>
+                <p className="text-white text-sm">{rally.regulations_data.organiser.contact}</p>
+                {rally.regulations_data.organiser.phone && (
+                  <p className="text-white/50 text-xs mt-0.5">{rally.regulations_data.organiser.phone}</p>
+                )}
+                {rally.regulations_data.organiser.email && (
+                  <p className="text-white/50 text-xs mt-0.5">{rally.regulations_data.organiser.email}</p>
+                )}
+              </div>
+            )}
+            {rally.regulations_data.keyOfficials?.map((official, i) => (
+              <div key={i} className="px-4 py-3">
+                <p className="text-white/35 text-xs mb-0.5">{official.role}</p>
+                <p className="text-white text-sm">{official.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Route: stage list from regulations */}
       {!loading && section === 'route' && rally?.regulations_data?.stages?.length > 0 && (
         <div className="mb-6">
@@ -180,11 +225,11 @@ export default function SectionPage() {
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
         </div>
-      ) : docs.length === 0 && section !== 'pre-event' && section !== 'route' ? (
+      ) : docs.length === 0 && section !== 'pre-event' && section !== 'route' && section !== 'team' ? (
         <div className="text-center py-12">
           <p className="text-white/30 text-sm">Nothing posted in this section yet.</p>
         </div>
-      ) : docs.length === 0 && (section === 'pre-event' || section === 'route') && !rally?.regulations_data ? (
+      ) : docs.length === 0 && (section === 'pre-event' || section === 'route' || section === 'team') && !rally?.regulations_data ? (
         <div className="text-center py-12">
           <p className="text-white/30 text-sm">Nothing posted in this section yet.</p>
         </div>
