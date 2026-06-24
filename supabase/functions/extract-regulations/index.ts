@@ -12,10 +12,32 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { rallyId, pdfBase64 } = await req.json()
+    const { rallyId, pdfBase64, websiteUrl } = await req.json()
 
     if (!rallyId || !pdfBase64) {
       throw new Error('Missing rallyId or pdfBase64')
+    }
+
+    // Optionally fetch website content
+    let websiteText = ''
+    if (websiteUrl) {
+      try {
+        const res = await fetch(websiteUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RallyLeague/1.0)' },
+          signal: AbortSignal.timeout(8000),
+        })
+        const html = await res.text()
+        // Strip HTML tags and collapse whitespace
+        websiteText = html
+          .replace(/<script[\s\S]*?<\/script>/gi, '')
+          .replace(/<style[\s\S]*?<\/style>/gi, '')
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s{2,}/g, ' ')
+          .trim()
+          .slice(0, 8000) // cap at 8k chars to keep prompt size reasonable
+      } catch {
+        // Website fetch failed — continue without it
+      }
     }
 
     const client = new Anthropic({
@@ -71,7 +93,9 @@ Deno.serve(async (req) => {
   "vehicleClasses": "brief list of classes e.g. RC2, RC3, RC4, RC5"
 }
 
-For keyOfficials, extract EVERY named official listed in the document — stewards, scrutineers, medical officer, radio coordinator, safety car driver, results manager, timekeeper, etc. Include everyone with a named role. Do not include Clerk of Course or Safety Delegate here as they have their own fields.
+For keyOfficials, extract EVERY named official listed in the document — stewards, scrutineers, medical officer, radio coordinator, safety car driver, results manager, timekeeper, competitor relations officer, chief marshal, etc. Include everyone with a named role. Do not include Clerk of Course or Safety Delegate here as they have their own fields.
+
+${websiteText ? `\n\nAdditional source — rally website content (use to supplement or fill gaps from the PDF):\n\n${websiteText}` : ''}
 
 Return ONLY valid JSON. Use null for fields not found.`,
             },

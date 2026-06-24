@@ -26,11 +26,14 @@ export default function ManageEventPage() {
   const [regsFile, setRegsFile] = useState(null)
   const [regsUploading, setRegsUploading] = useState(false)
   const [regsExtracting, setRegsExtracting] = useState(false)
+  const [websiteUrl, setWebsiteUrl] = useState('')
+  const [savingUrl, setSavingUrl] = useState(false)
 
   useEffect(() => {
     async function load() {
       const { data: r } = await supabase.from('rallies').select('*').eq('id', rallyId).single()
       setRally(r)
+      setWebsiteUrl(r?.website_url || '')
       loadDocs(activeSection)
     }
     load()
@@ -102,6 +105,15 @@ export default function ManageEventPage() {
     loadDocs(activeSection)
   }
 
+  async function saveWebsiteUrl() {
+    if (!websiteUrl.trim()) return
+    setSavingUrl(true)
+    await supabase.from('rallies').update({ website_url: websiteUrl.trim() }).eq('id', rallyId)
+    setRally(r => ({ ...r, website_url: websiteUrl.trim() }))
+    toast.success('Website URL saved')
+    setSavingUrl(false)
+  }
+
   async function handleRegsUpload(e) {
     e.preventDefault()
     if (!regsFile) { toast.error('Please select a PDF'); return }
@@ -146,7 +158,7 @@ export default function ManageEventPage() {
             'Authorization': `Bearer ${session.access_token}`,
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
           },
-          body: JSON.stringify({ rallyId, pdfBase64: base64 }),
+          body: JSON.stringify({ rallyId, pdfBase64: base64, websiteUrl: rally.website_url || '' }),
         }
       )
       const result = await res.json()
@@ -218,6 +230,29 @@ export default function ManageEventPage() {
             )}
           </div>
         ) : null}
+
+        {/* Website URL */}
+        <div className="mb-3">
+          <label className="rl-label">Rally website URL <span className="text-white/25 normal-case font-normal">(optional — used to supplement extraction)</span></label>
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={websiteUrl}
+              onChange={e => setWebsiteUrl(e.target.value)}
+              placeholder="https://www.galwayinternationalrally.com"
+              className="rl-input flex-1"
+            />
+            <button
+              type="button"
+              onClick={saveWebsiteUrl}
+              disabled={savingUrl || !websiteUrl.trim() || websiteUrl.trim() === rally.website_url}
+              className="rl-btn-ghost text-xs flex-shrink-0 disabled:opacity-40"
+            >
+              {savingUrl ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+          {rally.website_url && <p className="text-white/30 text-xs mt-1">Saved ✓ — will be included in next extraction</p>}
+        </div>
 
         <form onSubmit={handleRegsUpload} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <input

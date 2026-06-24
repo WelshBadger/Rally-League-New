@@ -106,6 +106,17 @@ export default function EventPage() {
           </div>
         )}
 
+        {/* Rally website */}
+        {rally.website_url && (
+          <div className="flex items-center justify-between py-3 border-t border-white/8">
+            <span className="text-white/40 text-xs">Official rally website</span>
+            <a href={rally.website_url} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-white/60 hover:text-white transition-colors font-medium">
+              Visit website →
+            </a>
+          </div>
+        )}
+
         {/* Rally Logistics button for logged-in users */}
         {user && (
           <div className="flex items-center justify-between py-3 border-t border-white/8">
