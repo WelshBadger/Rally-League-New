@@ -173,8 +173,8 @@ function FeaturedCard({ rally }) {
 
         {/* CTA */}
         <div className="flex items-center justify-between">
-          <span className="text-white/30 text-xs">View documents, bulletins &amp; route</span>
-          <span className="text-white text-sm font-medium group-hover:text-rl-accent transition-colors flex items-center gap-1.5">
+          <span className="hidden sm:block text-white/30 text-xs">View documents, bulletins &amp; route</span>
+          <span className="text-white text-sm font-medium group-hover:text-rl-accent transition-colors flex items-center gap-1.5 ml-auto">
             Open event
             <svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
               <path fillRule="evenodd" d="M8.22 2.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06l2.97-2.97H3.75a.75.75 0 010-1.5h7.44L8.22 4.03a.75.75 0 010-1.06z" clipRule="evenodd" />
