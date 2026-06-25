@@ -196,27 +196,99 @@ export default function SectionPage() {
         </div>
       )}
 
-      {/* Route: stage list from regulations */}
-      {!loading && section === 'route' && rally?.regulations_data?.stages?.length > 0 && (
-        <div className="mb-6">
-          <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">Stage list</p>
-          <div className="bg-rl-card border border-white/10 rounded-xl overflow-hidden">
-            <div className="divide-y divide-white/5">
-              {rally.regulations_data.stages.map((stage, i) => (
-                <div key={i} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-white/25 text-xs w-5 text-right">{stage.number}</span>
-                    <span className="text-white text-sm">{stage.name}</span>
+      {/* Route: schedule + stage tiles */}
+      {!loading && section === 'route' && rally?.regulations_data && (
+        <div className="mb-6 space-y-6">
+
+          {/* Schedule */}
+          {rally.regulations_data.schedule?.length > 0 && (
+            <div>
+              <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">Schedule</p>
+              <div className="bg-rl-card border border-white/10 rounded-xl overflow-hidden">
+                {Object.entries(
+                  rally.regulations_data.schedule.reduce((groups, item) => {
+                    const day = item.day || 'Event'
+                    if (!groups[day]) groups[day] = []
+                    groups[day].push(item)
+                    return groups
+                  }, {})
+                ).map(([day, items], gi) => (
+                  <div key={gi}>
+                    <div className="px-4 py-2 bg-white/4 border-b border-white/8">
+                      <p className="text-white/50 text-[11px] uppercase tracking-wider font-medium">{day}</p>
+                    </div>
+                    <div className="divide-y divide-white/5">
+                      {items.map((item, i) => (
+                        <div key={i} className="flex gap-4 px-4 py-3">
+                          <span className="text-white/35 text-xs w-14 flex-shrink-0 pt-0.5">{item.time}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm leading-snug">{item.event}</p>
+                            {item.location && (
+                              <p className="text-white/35 text-xs mt-0.5">{item.location}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className="text-white/45 text-xs">{stage.distance}</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <div className="px-4 py-2.5 border-t border-white/8 flex justify-between">
-              <span className="text-white/35 text-xs">Total</span>
-              <span className="text-white/35 text-xs">{rally.regulations_data.totalStageDistance}</span>
+          )}
+
+          {/* Stage tiles */}
+          {rally.regulations_data.stages?.length > 0 && (
+            <div>
+              <p className="text-white/30 text-[11px] uppercase tracking-widest font-medium mb-3">
+                Stage list
+                {rally.regulations_data.totalStageDistance && (
+                  <span className="ml-2 normal-case text-white/20">{rally.regulations_data.totalStageDistance} total</span>
+                )}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {rally.regulations_data.stages.map((stage) => {
+                  const mapDoc = docs.find(d => d.stage_number === stage.number)
+                  const Wrapper = mapDoc ? 'a' : 'div'
+                  const wrapperProps = mapDoc
+                    ? { href: mapDoc.file_url || mapDoc.link_url, target: '_blank', rel: 'noopener noreferrer' }
+                    : {}
+                  return (
+                    <Wrapper
+                      key={stage.number}
+                      {...wrapperProps}
+                      className={`group bg-rl-card border rounded-xl p-4 flex flex-col gap-2 no-underline transition-all ${
+                        mapDoc
+                          ? 'border-rl-accent/30 hover:border-rl-accent/60 cursor-pointer'
+                          : 'border-white/10'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <span className="text-white/20 text-xs font-medium">SS{stage.number}</span>
+                        {mapDoc ? (
+                          <svg className="w-3.5 h-3.5 text-rl-accent" viewBox="0 0 16 16" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.22 2.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06l2.97-2.97H3.75a.75.75 0 010-1.5h7.44L8.22 4.03a.75.75 0 010-1.06z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5 text-white/15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 2C5.24 2 3 4.24 3 7c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 6.5a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" />
+                          </svg>
+                        )}
+                      </div>
+                      <p className="text-white text-sm font-medium leading-snug">{stage.name}</p>
+                      <div className="flex items-center justify-between mt-auto pt-1">
+                        <span className="text-white/40 text-xs">{stage.distance}</span>
+                        {mapDoc ? (
+                          <span className="text-rl-accent text-[10px]">View map</span>
+                        ) : (
+                          <span className="text-white/20 text-[10px]">Map pending</span>
+                        )}
+                      </div>
+                    </Wrapper>
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -225,11 +297,11 @@ export default function SectionPage() {
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
         </div>
-      ) : docs.length === 0 && section !== 'pre-event' && section !== 'route' && section !== 'team' ? (
+      ) : docs.length === 0 && !['pre-event', 'route', 'team'].includes(section) ? (
         <div className="text-center py-12">
           <p className="text-white/30 text-sm">Nothing posted in this section yet.</p>
         </div>
-      ) : docs.length === 0 && (section === 'pre-event' || section === 'route' || section === 'team') && !rally?.regulations_data ? (
+      ) : docs.length === 0 && ['pre-event', 'route', 'team'].includes(section) && !rally?.regulations_data ? (
         <div className="text-center py-12">
           <p className="text-white/30 text-sm">Nothing posted in this section yet.</p>
         </div>

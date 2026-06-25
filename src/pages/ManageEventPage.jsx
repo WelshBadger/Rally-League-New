@@ -21,7 +21,7 @@ export default function ManageEventPage() {
   const [docs, setDocs] = useState([])
   const [activeSection, setActiveSection] = useState('bulletins')
   const [uploading, setUploading] = useState(false)
-  const [form, setForm] = useState({ title: '', section: 'bulletins', file: null, isUrgent: false, linkUrl: '' })
+  const [form, setForm] = useState({ title: '', section: 'bulletins', file: null, isUrgent: false, linkUrl: '', stageNumber: '' })
   const [docType, setDocType] = useState('pdf') // pdf | link | text
   const [regsFile, setRegsFile] = useState(null)
   const [regsUploading, setRegsUploading] = useState(false)
@@ -52,7 +52,7 @@ export default function ManageEventPage() {
   function switchSection(section) {
     setActiveSection(section)
     loadDocs(section)
-    setForm(f => ({ ...f, section }))
+    setForm(f => ({ ...f, section, stageNumber: '' }))
   }
 
   async function handleUpload(e) {
@@ -85,11 +85,12 @@ export default function ManageEventPage() {
         link_url: docType === 'link' ? form.linkUrl : null,
         is_urgent: form.isUrgent,
         posted_by: user.id,
+        stage_number: form.stageNumber ? parseInt(form.stageNumber) : null,
       })
       if (error) throw error
 
       toast.success('Document posted!')
-      setForm({ title: '', section: activeSection, file: null, isUrgent: false, linkUrl: '' })
+      setForm({ title: '', section: activeSection, file: null, isUrgent: false, linkUrl: '', stageNumber: '' })
       loadDocs(activeSection)
     } catch (err) {
       toast.error(err.message || 'Upload failed')
@@ -369,6 +370,25 @@ export default function ManageEventPage() {
                     placeholder="https://"
                     className="rl-input"
                   />
+                </div>
+              )}
+
+              {/* Stage picker — only shown for route section when stages are extracted */}
+              {activeSection === 'route' && rally.regulations_data?.stages?.length > 0 && (
+                <div>
+                  <label className="rl-label">Link to stage <span className="text-white/25 normal-case font-normal">(optional — enables map tile on route page)</span></label>
+                  <select
+                    value={form.stageNumber}
+                    onChange={e => setForm(f => ({ ...f, stageNumber: e.target.value }))}
+                    className="rl-input"
+                  >
+                    <option value="">No specific stage</option>
+                    {rally.regulations_data.stages.map(stage => (
+                      <option key={stage.number} value={stage.number}>
+                        SS{stage.number} — {stage.name} ({stage.distance})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
