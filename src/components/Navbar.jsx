@@ -20,7 +20,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 no-underline">
           <span className="w-2 h-2 rounded-full bg-rl-accent" />
-          <span className="text-white font-medium text-base tracking-wide">Rally League</span>
+          <span className="text-white font-medium text-base tracking-wide">RallyGo</span>
         </Link>
 
         {/* Desktop nav */}

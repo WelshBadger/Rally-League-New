@@ -32,7 +32,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex items-center gap-2 mb-8">
           <span className="w-2 h-2 rounded-full bg-rl-accent" />
-          <span className="text-white font-medium">Rally League</span>
+          <span className="text-white font-medium">RallyGo</span>
         </div>
 
         <h1 className="text-2xl font-medium text-white mb-1">Sign in</h1>
