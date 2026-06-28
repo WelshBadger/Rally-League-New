@@ -65,7 +65,7 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
-            <NavLink to="/" active={isActive('/')}>Calendar</NavLink>
+            <NavLink to="/calendar" active={isActive('/calendar')}>Calendar</NavLink>
             {isOrganiser && (
               <NavLink to="/organiser" active={isActive('/organiser')}>Dashboard</NavLink>
             )}
@@ -143,7 +143,7 @@ export default function Navbar() {
 
             {/* Nav links */}
             <div className="px-3 py-3 space-y-1">
-              <MobileNavLink to="/" active={isActive('/')} onClick={() => setMenuOpen(false)} icon={
+              <MobileNavLink to="/calendar" active={isActive('/calendar')} onClick={() => setMenuOpen(false)} icon={
                 <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2 6.5L8 2l6 4.5V14a.5.5 0 01-.5.5h-3.75v-3.75h-3.5V14.5H2.5A.5.5 0 012 14V6.5z" />
                 </svg>
