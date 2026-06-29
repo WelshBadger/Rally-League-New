@@ -30,8 +30,9 @@ export default function ManageEventPage() {
   const [fiFile, setFiFile] = useState(null)
   const [fiUploading, setFiUploading] = useState(false)
   const [fiExtracting, setFiExtracting] = useState(false)
-  const [entryMode, setEntryMode] = useState('url') // url | pdf | csv
+  const [entryMode, setEntryMode] = useState('url') // url | pdf | csv | paste
   const [entryUrl, setEntryUrl] = useState('')
+  const [entryText, setEntryText] = useState('')
   const [entryFile, setEntryFile] = useState(null)
   const [entryProcessing, setEntryProcessing] = useState(false)
   const [entryPreview, setEntryPreview] = useState(null)
@@ -258,6 +259,9 @@ export default function ManageEventPage() {
       if (entryMode === 'url') {
         if (!entryUrl.trim()) { toast.error('Enter a URL'); return }
         entries = await callExtractFunction({ url: entryUrl.trim() })
+      } else if (entryMode === 'paste') {
+        if (!entryText.trim()) { toast.error('Paste some text first'); return }
+        entries = await callExtractFunction({ text: entryText.trim() })
       } else if (entryMode === 'pdf') {
         if (!entryFile) { toast.error('Select a PDF'); return }
         const base64 = await new Promise((resolve, reject) => {
@@ -554,9 +558,9 @@ export default function ManageEventPage() {
         )}
 
         {/* Mode tabs */}
-        <div className="flex gap-1 mb-4">
-          {[{ id: 'url', label: 'URL' }, { id: 'pdf', label: 'PDF' }, { id: 'csv', label: 'CSV' }].map(m => (
-            <button key={m.id} onClick={() => { setEntryMode(m.id); setEntryPreview(null); setEntryFile(null) }}
+        <div className="flex gap-1 mb-4 flex-wrap">
+          {[{ id: 'url', label: 'URL' }, { id: 'paste', label: 'Paste text' }, { id: 'pdf', label: 'PDF' }, { id: 'csv', label: 'CSV' }].map(m => (
+            <button key={m.id} onClick={() => { setEntryMode(m.id); setEntryPreview(null); setEntryFile(null); setEntryText('') }}
               className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${entryMode === m.id ? 'border-rl-accent bg-rl-accent/10 text-white' : 'border-white/10 text-white/40 hover:text-white'}`}>
               {m.label}
             </button>
@@ -569,9 +573,21 @@ export default function ManageEventPage() {
               type="url"
               value={entryUrl}
               onChange={e => setEntryUrl(e.target.value)}
-              placeholder="https://www.rallyresults.co.uk/entry-list"
+              placeholder="https://www.rallies.info/…/entries"
               className="rl-input text-sm"
             />
+          )}
+          {entryMode === 'paste' && (
+            <div>
+              <p className="text-white/30 text-[10px] mb-1.5">Open the entry list page, select all text (Ctrl+A), copy (Ctrl+C) and paste below</p>
+              <textarea
+                value={entryText}
+                onChange={e => setEntryText(e.target.value)}
+                placeholder="Paste entry list text here…"
+                rows={6}
+                className="rl-input resize-none text-sm leading-relaxed"
+              />
+            </div>
           )}
           {entryMode === 'pdf' && (
             <input type="file" accept=".pdf" onChange={handleEntryFileChange}
@@ -588,7 +604,10 @@ export default function ManageEventPage() {
           <button type="submit" disabled={entryProcessing}
             className="rl-btn-primary text-xs flex items-center gap-2 disabled:opacity-50 py-2.5 px-4">
             {entryProcessing && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
-            {entryProcessing ? (entryMode === 'csv' ? 'Parsing…' : 'Extracting…') : entryMode === 'csv' ? 'Preview entries' : 'Extract entry list'}
+            {entryProcessing
+              ? (entryMode === 'csv' ? 'Parsing…' : 'Extracting…')
+              : entryMode === 'csv' ? 'Preview entries'
+              : 'Extract entry list'}
           </button>
         </form>
 
