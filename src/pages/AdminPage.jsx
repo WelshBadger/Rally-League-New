@@ -354,6 +354,15 @@ function RalliesTab() {
       .then(({ data }) => { setRallies(data || []); setLoading(false) })
   }, [])
 
+  async function handleDelete(id, name) {
+    if (!confirm(`Delete "${name}" and all its documents? This cannot be undone.`)) return
+    await supabase.from('rally_documents').delete().eq('rally_id', id)
+    const { error } = await supabase.from('rallies').delete().eq('id', id)
+    if (error) return toast.error('Delete failed')
+    toast.success('Rally deleted')
+    setRallies(prev => prev.filter(r => r.id !== id))
+  }
+
   return (
     <Section
       title="All rallies"
@@ -372,6 +381,7 @@ function RalliesTab() {
           actions={[
             { label: 'View', href: `/event/${r.id}` },
             { label: 'Manage', href: `/organiser/event/${r.id}`, primary: true },
+            { label: 'Delete', onClick: () => handleDelete(r.id, r.name), danger: true },
           ]}
         />
       ))}

@@ -116,6 +116,15 @@ export default function ManageEventPage() {
     loadDocs(activeSection)
   }
 
+  async function handleDeleteEvent() {
+    if (!confirm(`Delete "${rally.name}" and all its documents permanently? This cannot be undone.`)) return
+    await supabase.from('rally_documents').delete().eq('rally_id', rallyId)
+    const { error } = await supabase.from('rallies').delete().eq('id', rallyId)
+    if (error) { toast.error('Delete failed'); return }
+    toast.success('Event deleted')
+    window.location.href = '/admin'
+  }
+
   async function saveWebsiteUrl() {
     if (!websiteUrl.trim()) return
     setSavingUrl(true)
@@ -369,7 +378,10 @@ export default function ManageEventPage() {
 
       <div className="flex items-start justify-between gap-4 mb-6">
         <h1 className="text-xl font-medium text-white">{rally.name}</h1>
-        <Link to={`/event/${rallyId}`} className="rl-btn-ghost text-xs">Preview ↗</Link>
+        <div className="flex items-center gap-2">
+          <Link to={`/event/${rallyId}`} className="rl-btn-ghost text-xs">Preview ↗</Link>
+          <button onClick={handleDeleteEvent} className="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/40 px-3 py-1.5 rounded-lg transition-all">Delete event</button>
+        </div>
       </div>
 
       {/* Regulations card */}
