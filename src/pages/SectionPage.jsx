@@ -127,27 +127,115 @@ export default function SectionPage() {
             )}
           </div>
 
-          {rally.regulations_pdf_url && (
-            <a
-              href={rally.regulations_pdf_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 bg-rl-card border border-white/10 rounded-xl px-4 py-3.5 hover:border-white/25 transition-all group"
-            >
-              <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                <svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="text-white text-sm font-medium">Supplementary Regulations</p>
-                <p className="text-white/35 text-xs mt-0.5">Full regulations PDF</p>
-              </div>
-              <svg className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" viewBox="0 0 16 16" fill="currentColor">
-                <path fillRule="evenodd" d="M8.22 2.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06l2.97-2.97H3.75a.75.75 0 010-1.5h7.44L8.22 4.03a.75.75 0 010-1.06z" clipRule="evenodd" />
-              </svg>
-            </a>
+          {/* Final Instructions extracted info */}
+          {rally.final_instructions_data && (
+            <div className="bg-rl-card border border-white/10 rounded-2xl divide-y divide-white/8">
+              {rally.final_instructions_data.signingOn?.length > 0 && (
+                <div className="px-4 py-4">
+                  <p className="text-white/35 text-[11px] uppercase tracking-wide mb-2">Signing On</p>
+                  <div className="space-y-1">
+                    {rally.final_instructions_data.signingOn.map((s, i) => (
+                      <div key={i} className="flex flex-wrap gap-x-3 text-sm">
+                        <span className="text-white font-medium">{s.day}</span>
+                        <span className="text-white/60">{s.times}</span>
+                        {s.location && <span className="text-white/40">{s.location}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {rally.final_instructions_data.scrutineering?.length > 0 && (
+                <div className="px-4 py-4">
+                  <p className="text-white/35 text-[11px] uppercase tracking-wide mb-2">Scrutineering</p>
+                  <div className="space-y-1">
+                    {rally.final_instructions_data.scrutineering.map((s, i) => (
+                      <div key={i} className="flex flex-wrap gap-x-3 text-sm">
+                        <span className="text-white font-medium">{s.day}</span>
+                        <span className="text-white/60">{s.times}</span>
+                        {s.location && <span className="text-white/40">{s.location}</span>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {rally.final_instructions_data.noiseTesting?.limit && (
+                <div className="px-4 py-4">
+                  <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Noise Limit</p>
+                  <p className="text-white text-sm">{rally.final_instructions_data.noiseTesting.limit}
+                    {rally.final_instructions_data.noiseTesting.method && <span className="text-white/45"> · {rally.final_instructions_data.noiseTesting.method}</span>}
+                  </p>
+                  {rally.final_instructions_data.noiseTesting.location && (
+                    <p className="text-white/40 text-xs mt-0.5">{rally.final_instructions_data.noiseTesting.location}</p>
+                  )}
+                </div>
+              )}
+              {rally.final_instructions_data.serviceArea?.location && (
+                <div className="px-4 py-4">
+                  <p className="text-white/35 text-[11px] uppercase tracking-wide mb-1">Service Area</p>
+                  <p className="text-white text-sm">{rally.final_instructions_data.serviceArea.location}</p>
+                  {rally.final_instructions_data.serviceArea.notes && (
+                    <p className="text-white/40 text-xs mt-0.5">{rally.final_instructions_data.serviceArea.notes}</p>
+                  )}
+                </div>
+              )}
+              {rally.final_instructions_data.importantNotes?.length > 0 && (
+                <div className="px-4 py-4">
+                  <p className="text-white/35 text-[11px] uppercase tracking-wide mb-2">Important Notes</p>
+                  <ul className="space-y-1">
+                    {rally.final_instructions_data.importantNotes.map((note, i) => (
+                      <li key={i} className="text-white/70 text-sm flex gap-2"><span className="text-white/25 flex-shrink-0">·</span>{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
+
+          {/* PDF download links */}
+          <div className="space-y-2">
+            {rally.regulations_pdf_url && (
+              <a
+                href={rally.regulations_pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-rl-card border border-white/10 rounded-xl px-4 py-3.5 hover:border-white/25 transition-all group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white text-sm font-medium">Supplementary Regulations</p>
+                  <p className="text-white/35 text-xs mt-0.5">Full regulations PDF</p>
+                </div>
+                <svg className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" viewBox="0 0 16 16" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.22 2.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06l2.97-2.97H3.75a.75.75 0 010-1.5h7.44L8.22 4.03a.75.75 0 010-1.06z" clipRule="evenodd" />
+                </svg>
+              </a>
+            )}
+            {rally.final_instructions_pdf_url && (
+              <a
+                href={rally.final_instructions_pdf_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-rl-card border border-white/10 rounded-xl px-4 py-3.5 hover:border-white/25 transition-all group"
+              >
+                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-white text-sm font-medium">Final Instructions</p>
+                  <p className="text-white/35 text-xs mt-0.5">Full final instructions PDF</p>
+                </div>
+                <svg className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" viewBox="0 0 16 16" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.22 2.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06l2.97-2.97H3.75a.75.75 0 010-1.5h7.44L8.22 4.03a.75.75 0 010-1.06z" clipRule="evenodd" />
+                </svg>
+              </a>
+            )}
+          </div>
         </div>
       )}
 

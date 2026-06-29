@@ -26,6 +26,9 @@ export default function ManageEventPage() {
   const [regsFile, setRegsFile] = useState(null)
   const [regsUploading, setRegsUploading] = useState(false)
   const [regsExtracting, setRegsExtracting] = useState(false)
+  const [fiFile, setFiFile] = useState(null)
+  const [fiUploading, setFiUploading] = useState(false)
+  const [fiExtracting, setFiExtracting] = useState(false)
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [savingUrl, setSavingUrl] = useState(false)
 
@@ -178,6 +181,59 @@ export default function ManageEventPage() {
     }
   }
 
+  async function handleFiUpload(e) {
+    e.preventDefault()
+    if (!fiFile) { toast.error('Please select a PDF'); return }
+    setFiUploading(true)
+
+    try {
+      const path = `${rallyId}/final_instructions_${Date.now()}.pdf`
+      const { error: uploadErr } = await supabase.storage
+        .from('rally-docs')
+        .upload(path, fiFile, { contentType: 'application/pdf', upsert: true })
+      if (uploadErr) throw uploadErr
+
+      const { data: { publicUrl } } = supabase.storage.from('rally-docs').getPublicUrl(path)
+      await supabase.from('rallies').update({ final_instructions_pdf_url: publicUrl }).eq('id', rallyId)
+
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result.split(',')[1])
+        reader.onerror = reject
+        reader.readAsDataURL(fiFile)
+      })
+
+      setFiUploading(false)
+      setFiExtracting(true)
+
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-final-instructions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ rallyId, pdfBase64: base64 }),
+        }
+      )
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Extraction failed')
+
+      const { data: updated } = await supabase.from('rallies').select('*').eq('id', rallyId).single()
+      setRally(updated)
+      setFiFile(null)
+      toast.success('Final Instructions uploaded and info extracted!')
+    } catch (err) {
+      toast.error(err.message || 'Failed to process Final Instructions')
+    } finally {
+      setFiUploading(false)
+      setFiExtracting(false)
+    }
+  }
+
   if (!rally) return <div className="max-w-4xl mx-auto px-4 py-8"><div className="h-8 w-48 bg-white/5 rounded-lg animate-pulse" /></div>
 
   return (
@@ -269,6 +325,66 @@ export default function ManageEventPage() {
           >
             {(regsUploading || regsExtracting) && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
             {regsUploading ? 'Uploading…' : regsExtracting ? 'Extracting…' : rally.regulations_data ? 'Replace' : 'Upload & Extract'}
+          </button>
+        </form>
+      </div>
+
+      {/* Final Instructions card */}
+      <div className="bg-rl-card border border-white/10 rounded-xl p-5 mb-5">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-white font-medium text-sm">Final Instructions</h2>
+            <p className="text-white/35 text-xs mt-0.5">Upload the Final Instructions PDF — signing on, scrutineering, noise limits and schedule will be extracted automatically.</p>
+          </div>
+          {rally.final_instructions_pdf_url && (
+            <a href={rally.final_instructions_pdf_url} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-rl-accent hover:text-white transition-colors flex-shrink-0">
+              View PDF ↗
+            </a>
+          )}
+        </div>
+
+        {rally.final_instructions_data && (
+          <div className="mb-3 bg-rl-accent/5 border border-rl-accent/20 rounded-lg p-3 space-y-2 text-xs">
+            {rally.final_instructions_data.signingOn?.length > 0 && (
+              <div>
+                <p className="text-white/35 mb-1">Signing On</p>
+                {rally.final_instructions_data.signingOn.map((s, i) => (
+                  <p key={i} className="text-white">{s.day} · {s.times}{s.location ? ` · ${s.location}` : ''}</p>
+                ))}
+              </div>
+            )}
+            {rally.final_instructions_data.scrutineering?.length > 0 && (
+              <div>
+                <p className="text-white/35 mb-1">Scrutineering</p>
+                {rally.final_instructions_data.scrutineering.map((s, i) => (
+                  <p key={i} className="text-white">{s.day} · {s.times}{s.location ? ` · ${s.location}` : ''}</p>
+                ))}
+              </div>
+            )}
+            {rally.final_instructions_data.noiseTesting?.limit && (
+              <div>
+                <p className="text-white/35 mb-1">Noise Limit</p>
+                <p className="text-white">{rally.final_instructions_data.noiseTesting.limit}{rally.final_instructions_data.noiseTesting.method ? ` · ${rally.final_instructions_data.noiseTesting.method}` : ''}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <form onSubmit={handleFiUpload} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={e => setFiFile(e.target.files[0])}
+            className="flex-1 text-xs text-white/50 file:mr-3 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:bg-white/10 file:text-white/70 cursor-pointer"
+          />
+          <button
+            type="submit"
+            disabled={!fiFile || fiUploading || fiExtracting}
+            className="rl-btn-primary text-xs flex-shrink-0 flex items-center justify-center gap-2 disabled:opacity-50 py-2.5"
+          >
+            {(fiUploading || fiExtracting) && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+            {fiUploading ? 'Uploading…' : fiExtracting ? 'Extracting…' : rally.final_instructions_data ? 'Replace' : 'Upload & Extract'}
           </button>
         </form>
       </div>
