@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { formatDistanceToNow } from '../lib/dateUtils'
 
 const SECTION_META = {
-  'pre-event': { label: 'Pre-event info', color: '#E24B4A' },
-  'route': { label: 'Route information', color: '#378ADD' },
-  'bulletins': { label: 'Live bulletins & documents', color: '#E24B4A' },
-  'team': { label: 'Organising team', color: '#1D9E75' },
-  'accommodation': { label: 'Accommodation', color: '#7F77DD' },
-  'results': { label: 'Live results', color: '#BA7517' },
+  'pre-event':  { label: 'Pre-event info',          color: '#E24B4A' },
+  'route':      { label: 'Route information',        color: '#378ADD' },
+  'bulletins':  { label: 'Live bulletins & documents', color: '#E24B4A' },
+  'team':       { label: 'Organising team',          color: '#1D9E75' },
+  'accommodation': { label: 'Accommodation',         color: '#7F77DD' },
+  'results':    { label: 'Live results',             color: '#BA7517' },
+  'entry-list': { label: 'Entry list',               color: '#0EA5A0' },
 }
 
 export default function SectionPage() {
@@ -380,12 +381,17 @@ export default function SectionPage() {
         </div>
       )}
 
+      {/* Entry list */}
+      {!loading && section === 'entry-list' && (
+        <EntryListView entries={rally?.entry_list_data} docs={docs} />
+      )}
+
       {/* Documents */}
       {loading ? (
         <div className="space-y-2">
           {[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-white/5 rounded-xl animate-pulse" />)}
         </div>
-      ) : docs.length === 0 && !['pre-event', 'route', 'team'].includes(section) ? (
+      ) : docs.length === 0 && !['pre-event', 'route', 'team', 'entry-list'].includes(section) ? (
         <div className="text-center py-12">
           <p className="text-white/30 text-sm">Nothing posted in this section yet.</p>
         </div>
@@ -393,7 +399,11 @@ export default function SectionPage() {
         <div className="text-center py-12">
           <p className="text-white/30 text-sm">Nothing posted in this section yet.</p>
         </div>
-      ) : docs.length > 0 ? (
+      ) : docs.length === 0 && section === 'entry-list' && !rally?.entry_list_data ? (
+        <div className="text-center py-12">
+          <p className="text-white/30 text-sm">Entry list not yet published.</p>
+        </div>
+      ) : docs.length > 0 && section !== 'entry-list' ? (
         <div className="space-y-2">
           {docs.map((doc) => (
             <DocumentItem key={doc.id} doc={doc} />
@@ -401,6 +411,134 @@ export default function SectionPage() {
         </div>
       ) : null}
     </main>
+  )
+}
+
+function EntryListView({ entries, docs }) {
+  const [search, setSearch] = useState('')
+  const [classFilter, setClassFilter] = useState('All')
+
+  const classes = useMemo(() => {
+    if (!entries?.length) return []
+    return ['All', ...Array.from(new Set(entries.map(e => e.class).filter(Boolean))).sort()]
+  }, [entries])
+
+  const filtered = useMemo(() => {
+    if (!entries?.length) return []
+    return entries.filter(e => {
+      const q = search.toLowerCase()
+      const matchSearch = !q || e.car?.toLowerCase().includes(q) || e.driver?.toLowerCase().includes(q) || e.codriver?.toLowerCase().includes(q) || e.vehicle?.toLowerCase().includes(q) || e.club?.toLowerCase().includes(q)
+      const matchClass = classFilter === 'All' || e.class === classFilter
+      return matchSearch && matchClass
+    })
+  }, [entries, search, classFilter])
+
+  if (!entries?.length) return null
+
+  return (
+    <div className="mb-6 space-y-4">
+      {/* Search + filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" viewBox="0 0 16 16" fill="currentColor">
+            <path fillRule="evenodd" d="M9.965 11.026a5 5 0 111.06-1.06l2.755 2.754a.75.75 0 11-1.06 1.06l-2.755-2.754zM10.5 7a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0z" clipRule="evenodd" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search driver, car number, vehicle…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="rl-input pl-9 text-sm"
+          />
+        </div>
+        {classes.length > 1 && (
+          <select
+            value={classFilter}
+            onChange={e => setClassFilter(e.target.value)}
+            className="rl-input text-sm sm:w-40"
+          >
+            {classes.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        )}
+      </div>
+
+      {/* Count */}
+      <p className="text-white/30 text-xs">
+        {filtered.length === entries.length
+          ? `${entries.length} entries`
+          : `${filtered.length} of ${entries.length} entries`}
+      </p>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
+        <p className="text-white/25 text-sm text-center py-8">No entries match your search.</p>
+      ) : (
+        <div className="bg-rl-card border border-white/10 rounded-xl overflow-hidden">
+          {/* Mobile: card list */}
+          <div className="sm:hidden divide-y divide-white/8">
+            {filtered.map((e, i) => (
+              <div key={i} className="px-4 py-3.5 flex items-center gap-3">
+                <span className="text-[#0EA5A0] font-bold text-lg w-10 flex-shrink-0 text-center">{e.car}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm font-medium truncate">{e.driver}</p>
+                  {e.codriver && <p className="text-white/50 text-xs truncate">{e.codriver}</p>}
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {e.class && <span className="text-[10px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{e.class}</span>}
+                    {e.vehicle && <span className="text-white/30 text-[10px]">{e.vehicle}</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/3">
+                  {['#', 'Driver', 'Co-driver', 'Class', 'Vehicle', 'Club'].map(h => (
+                    <th key={h} className="text-left px-4 py-3 text-white/35 text-xs font-medium uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filtered.map((e, i) => (
+                  <tr key={i} className="hover:bg-white/3 transition-colors">
+                    <td className="px-4 py-3 text-[#0EA5A0] font-bold">{e.car}</td>
+                    <td className="px-4 py-3 text-white font-medium">{e.driver}</td>
+                    <td className="px-4 py-3 text-white/60">{e.codriver}</td>
+                    <td className="px-4 py-3">
+                      {e.class && <span className="text-[11px] text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{e.class}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-white/50">{e.vehicle}</td>
+                    <td className="px-4 py-3 text-white/35">{e.club}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* PDF download if also uploaded */}
+      {docs?.filter(d => d.file_url || d.link_url).map(doc => (
+        <a key={doc.id} href={doc.file_url || doc.link_url} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-3 bg-rl-card border border-white/10 rounded-xl px-4 py-3.5 hover:border-white/25 transition-all group no-underline">
+          <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-white text-sm font-medium">{doc.title}</p>
+            <p className="text-white/35 text-xs mt-0.5">Download PDF</p>
+          </div>
+          <svg className="w-4 h-4 text-white/20 group-hover:text-white/50 transition-colors" viewBox="0 0 16 16" fill="currentColor">
+            <path fillRule="evenodd" d="M8.22 2.97a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06-1.06l2.97-2.97H3.75a.75.75 0 010-1.5h7.44L8.22 4.03a.75.75 0 010-1.06z" clipRule="evenodd" />
+          </svg>
+        </a>
+      ))}
+    </div>
   )
 }
 

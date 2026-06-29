@@ -6,12 +6,13 @@ import toast from 'react-hot-toast'
 import { formatDistanceToNow } from '../lib/dateUtils'
 
 const SECTIONS = [
-  { key: 'pre-event', label: 'Pre-event info' },
-  { key: 'route', label: 'Route information' },
-  { key: 'bulletins', label: 'Live bulletins' },
-  { key: 'team', label: 'Organising team' },
+  { key: 'pre-event',  label: 'Pre-event info' },
+  { key: 'route',      label: 'Route information' },
+  { key: 'bulletins',  label: 'Live bulletins' },
+  { key: 'team',       label: 'Organising team' },
   { key: 'accommodation', label: 'Accommodation' },
-  { key: 'results', label: 'Live results' },
+  { key: 'results',    label: 'Live results' },
+  { key: 'entry-list', label: 'Entry list' },
 ]
 
 export default function ManageEventPage() {
@@ -29,6 +30,9 @@ export default function ManageEventPage() {
   const [fiFile, setFiFile] = useState(null)
   const [fiUploading, setFiUploading] = useState(false)
   const [fiExtracting, setFiExtracting] = useState(false)
+  const [entryFile, setEntryFile] = useState(null)
+  const [entryUploading, setEntryUploading] = useState(false)
+  const [entryPreview, setEntryPreview] = useState(null)
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [savingUrl, setSavingUrl] = useState(false)
 
@@ -179,6 +183,76 @@ export default function ManageEventPage() {
       setRegsUploading(false)
       setRegsExtracting(false)
     }
+  }
+
+  function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/)
+    if (lines.length < 2) throw new Error('CSV must have a header row and at least one entry')
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase())
+    // Map common header variants to standard keys
+    const MAP = {
+      car: ['car', 'car no', 'car number', 'no', 'number', '#'],
+      driver: ['driver', 'driver name', 'driver 1'],
+      codriver: ['co-driver', 'codriver', 'co driver', 'navigator', 'driver 2'],
+      class: ['class', 'category', 'cat', 'group'],
+      vehicle: ['vehicle', 'car make', 'make', 'model', 'car model', 'make/model'],
+      club: ['club', 'team', 'entrant'],
+      nationality: ['nationality', 'nat', 'nation', 'country'],
+    }
+    function findCol(key) {
+      const variants = MAP[key]
+      return headers.findIndex(h => variants.some(v => h.includes(v)))
+    }
+    const cols = { car: findCol('car'), driver: findCol('driver'), codriver: findCol('codriver'), class: findCol('class'), vehicle: findCol('vehicle'), club: findCol('club'), nationality: findCol('nationality') }
+    return lines.slice(1).filter(l => l.trim()).map(line => {
+      const cells = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''))
+      return {
+        car:     cols.car >= 0     ? cells[cols.car]     : '',
+        driver:  cols.driver >= 0  ? cells[cols.driver]  : '',
+        codriver: cols.codriver >= 0 ? cells[cols.codriver] : '',
+        class:   cols.class >= 0   ? cells[cols.class]   : '',
+        vehicle: cols.vehicle >= 0 ? cells[cols.vehicle] : '',
+        club:    cols.club >= 0    ? cells[cols.club]    : '',
+        nationality: cols.nationality >= 0 ? cells[cols.nationality] : '',
+      }
+    }).filter(e => e.car || e.driver)
+  }
+
+  function handleEntryFileChange(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    setEntryFile(file)
+    const reader = new FileReader()
+    reader.onload = ev => {
+      try {
+        const entries = parseCSV(ev.target.result)
+        setEntryPreview(entries)
+      } catch (err) {
+        toast.error(err.message)
+        setEntryPreview(null)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  async function handleEntryUpload(e) {
+    e.preventDefault()
+    if (!entryPreview?.length) return toast.error('No valid entries parsed')
+    setEntryUploading(true)
+    const { error } = await supabase.from('rallies').update({ entry_list_data: entryPreview }).eq('id', rallyId)
+    setEntryUploading(false)
+    if (error) return toast.error('Save failed')
+    setRally(r => ({ ...r, entry_list_data: entryPreview }))
+    setEntryFile(null)
+    setEntryPreview(null)
+    toast.success(`Entry list saved — ${entryPreview.length} entries`)
+  }
+
+  async function clearEntryList() {
+    if (!confirm('Clear the entry list?')) return
+    await supabase.from('rallies').update({ entry_list_data: null }).eq('id', rallyId)
+    setRally(r => ({ ...r, entry_list_data: null }))
+    toast.success('Entry list cleared')
   }
 
   async function handleFiUpload(e) {
@@ -386,6 +460,81 @@ export default function ManageEventPage() {
             {(fiUploading || fiExtracting) && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
             {fiUploading ? 'Uploading…' : fiExtracting ? 'Extracting…' : rally.final_instructions_data ? 'Replace' : 'Upload & Extract'}
           </button>
+        </form>
+      </div>
+
+      {/* Entry List card */}
+      <div className="bg-rl-card border border-white/10 rounded-xl p-5 mb-5">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h2 className="text-white font-medium text-sm">Entry List</h2>
+            <p className="text-white/35 text-xs mt-0.5">Upload a CSV — competitors can search by car number, driver, class and vehicle.</p>
+          </div>
+          {rally.entry_list_data?.length > 0 && (
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-white/40 text-xs">{rally.entry_list_data.length} entries</span>
+              <button onClick={clearEntryList} className="text-xs text-red-400/60 hover:text-red-400 transition-colors">Clear</button>
+            </div>
+          )}
+        </div>
+
+        {rally.entry_list_data?.length > 0 && (
+          <div className="mb-3 mt-3 bg-[#0EA5A0]/5 border border-[#0EA5A0]/20 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto max-h-48">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-white/10 bg-white/3">
+                    {['#', 'Driver', 'Co-driver', 'Class', 'Vehicle'].map(h => (
+                      <th key={h} className="text-left px-3 py-2 text-white/35 font-medium whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {rally.entry_list_data.slice(0, 5).map((e, i) => (
+                    <tr key={i}>
+                      <td className="px-3 py-2 text-white font-medium">{e.car}</td>
+                      <td className="px-3 py-2 text-white/80">{e.driver}</td>
+                      <td className="px-3 py-2 text-white/60">{e.codriver}</td>
+                      <td className="px-3 py-2 text-white/60">{e.class}</td>
+                      <td className="px-3 py-2 text-white/60">{e.vehicle}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {rally.entry_list_data.length > 5 && (
+              <p className="text-white/25 text-xs px-3 py-2 border-t border-white/8">+{rally.entry_list_data.length - 5} more entries</p>
+            )}
+          </div>
+        )}
+
+        {entryPreview && (
+          <div className="mb-3 mt-3 border border-yellow-500/20 bg-yellow-500/5 rounded-lg px-3 py-2">
+            <p className="text-yellow-400 text-xs font-medium mb-1">{entryPreview.length} entries parsed — review before saving</p>
+            <p className="text-white/40 text-xs">{entryPreview[0]?.driver}{entryPreview[0]?.codriver ? ` / ${entryPreview[0].codriver}` : ''} · Car {entryPreview[0]?.car} · {entryPreview[0]?.class}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleEntryUpload} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-3">
+          <div className="flex-1">
+            <p className="text-white/25 text-[10px] mb-1.5">CSV headers: Car, Driver, Co-driver, Class, Vehicle, Club (column names are flexible)</p>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleEntryFileChange}
+              className="text-xs text-white/50 file:mr-3 file:py-2 file:px-3 file:rounded file:border-0 file:text-xs file:bg-white/10 file:text-white/70 cursor-pointer"
+            />
+          </div>
+          {entryPreview?.length > 0 && (
+            <button
+              type="submit"
+              disabled={entryUploading}
+              className="rl-btn-primary text-xs flex-shrink-0 flex items-center gap-2 disabled:opacity-50 py-2.5 px-4"
+            >
+              {entryUploading && <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />}
+              {entryUploading ? 'Saving…' : `Save ${entryPreview.length} entries`}
+            </button>
+          )}
         </form>
       </div>
 
