@@ -483,7 +483,7 @@ function EntryListView({ entries, docs }) {
                   <p className="text-white text-sm font-medium truncate">{e.driver}</p>
                   {e.codriver && <p className="text-white/50 text-xs truncate">{e.codriver}</p>}
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    {e.class && <span className="text-[10px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{e.class}</span>}
+                    {e.class && <span className="text-[10px] text-white/40 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{e.class.replace(/^Class\s*/i, '')}</span>}
                     {e.vehicle && <span className="text-white/30 text-[10px]">{e.vehicle}</span>}
                   </div>
                 </div>
@@ -496,7 +496,7 @@ function EntryListView({ entries, docs }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/10 bg-white/3">
-                  {['#', 'Driver', 'Co-driver', 'Class', 'Vehicle', 'Club'].map(h => (
+                  {['#', 'Driver', 'Co-driver', 'Class', 'Vehicle', 'Sponsor'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-white/35 text-xs font-medium uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -508,10 +508,10 @@ function EntryListView({ entries, docs }) {
                     <td className="px-4 py-3 text-white font-medium">{e.driver}</td>
                     <td className="px-4 py-3 text-white/60">{e.codriver}</td>
                     <td className="px-4 py-3">
-                      {e.class && <span className="text-[11px] text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">{e.class}</span>}
+                      {e.class && <span className="text-[11px] text-white/50 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">{e.class.replace(/^Class\s*/i, '')}</span>}
                     </td>
                     <td className="px-4 py-3 text-white/50">{e.vehicle}</td>
-                    <td className="px-4 py-3 text-white/35">{e.club}</td>
+                    <td className="px-4 py-3 text-white/35 text-xs max-w-[140px] truncate">{e.club}</td>
                   </tr>
                 ))}
               </tbody>
