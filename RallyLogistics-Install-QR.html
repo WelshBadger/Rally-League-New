@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rally Logistics — Install</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d0d14;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: #13131f;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  .logo {
+    width: 72px;
+    height: 72px;
+    background: #0d0d14;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .logo::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: #E24B4A;
+  }
+  .logo span {
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+    letter-spacing: -1px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .qr-wrap {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    display: inline-block;
+    margin-bottom: 28px;
+  }
+  #qrcode canvas, #qrcode img { display: block; }
+  .url {
+    font-size: 13px;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 32px;
+    font-family: monospace;
+  }
+  .divider {
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 0 -32px 28px;
+  }
+  .steps-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.3);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .steps { text-align: left; display: flex; flex-direction: column; gap: 12px; }
+  .step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .platform {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .platform-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+  }
+  .platform-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(226,75,74,0.15);
+    border: 1px solid rgba(226,75,74,0.3);
+    color: #E24B4A;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step p { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.4; }
+  .step p strong { color: white; }
+  .section { margin-bottom: 20px; }
+  @media print {
+    body { background: white; }
+    .card { border: 1px solid #ddd; background: white; color: black; }
+    h1, .step p { color: black; }
+    .subtitle, .url, .platform-name { color: #666; }
+    .step-num { background: #fde8e8; border-color: #E24B4A; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span>RL</span></div>
+  <h1>Rally Logistics</h1>
+  <p class="subtitle">Team pack for rally events</p>
+
+  <div class="qr-wrap">
+    <div id="qrcode"></div>
+  </div>
+  <p class="url">rally-logistics.app</p>
+
+  <div class="divider"></div>
+
+  <p class="steps-title">How to install on your phone</p>
+
+  <div class="steps">
+    <div class="section">
+      <div class="platform">
+        <span class="platform-icon">🍎</span>
+        <span class="platform-name">iPhone / iPad</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <p>Scan the QR code to open in <strong>Safari</strong></p>
+      </div>
+      <br>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p>Tap the <strong>Share button</strong> at the bottom of the screen <strong>⎙</strong></p>
+      </div>
+      <br>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p>Scroll down and tap <strong>"Add to Home Screen"</strong> then <strong>Add</strong></p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="platform">
+        <span class="platform-icon">🤖</span>
+        <span class="platform-name">Android</span>
+      </div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <p>Scan the QR code to open in <strong>Chrome</strong></p>
+      </div>
+      <br>
+      <div class="step">
+        <div class="step-num">2</div>
+        <p>Tap the <strong>⋮ menu</strong> in the top right corner</p>
+      </div>
+      <br>
+      <div class="step">
+        <div class="step-num">3</div>
+        <p>Tap <strong>"Add to Home screen"</strong> then <strong>Install</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var url = 'https://rally-logistics.app';
+  new QRCode(document.getElementById('qrcode'), {
+    text: url,
+    width: 200,
+    height: 200,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+</script>
+</body>
+</html>

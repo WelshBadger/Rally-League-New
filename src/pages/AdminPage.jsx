@@ -357,6 +357,8 @@ function RalliesTab() {
   async function handleDelete(id, name) {
     if (!confirm(`Delete "${name}" and all its documents? This cannot be undone.`)) return
     await supabase.from('rally_documents').delete().eq('rally_id', id)
+    await supabase.from('calendar_events').delete().eq('rally_id', id)
+    await supabase.from('logistics_packs').delete().eq('rally_id', id)
     const { error } = await supabase.from('rallies').delete().eq('id', id)
     if (error) return toast.error('Delete failed')
     toast.success('Rally deleted')

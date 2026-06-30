@@ -119,6 +119,8 @@ export default function ManageEventPage() {
   async function handleDeleteEvent() {
     if (!confirm(`Delete "${rally.name}" and all its documents permanently? This cannot be undone.`)) return
     await supabase.from('rally_documents').delete().eq('rally_id', rallyId)
+    await supabase.from('calendar_events').delete().eq('rally_id', rallyId)
+    await supabase.from('logistics_packs').delete().eq('rally_id', rallyId)
     const { error } = await supabase.from('rallies').delete().eq('id', rallyId)
     if (error) { toast.error('Delete failed'); return }
     toast.success('Event deleted')
